@@ -24,10 +24,6 @@ async function createCustomServer() {
 
     // Create HTTP server that will handle both Next.js and Socket.IO
     const server = createServer((req, res) => {
-      // Skip socket.io requests from Next.js handler
-      if (req.url?.startsWith('/api/socketio')) {
-        return;
-      }
       handle(req, res);
     });
 
@@ -43,9 +39,12 @@ async function createCustomServer() {
     setupSocket(io);
 
     // Start the server
-    server.listen(currentPort, hostname, () => {
-      console.log(`> Ready on http://${hostname}:${currentPort}`);
-      console.log(`> Socket.IO server running at ws://${hostname}:${currentPort}/api/socketio`);
+    return new Promise((resolve) => {
+      server.listen(currentPort, hostname, () => {
+        console.log(`> Ready on http://${hostname}:${currentPort}`);
+        console.log(`> Socket.IO server running at ws://${hostname}:${currentPort}/api/socketio`);
+        resolve(server);
+      });
     });
 
   } catch (err) {
@@ -54,5 +53,9 @@ async function createCustomServer() {
   }
 }
 
-// Start the server
-createCustomServer();
+// Start the server if running as a script
+if (require.main === module) {
+  createCustomServer();
+}
+
+export { createCustomServer, setupSocket };
